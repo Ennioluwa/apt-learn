@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mongodb"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  firstName String
+  lastName  String
+  password  String
+  courses   Course[]
+  picture   String   @default("/avatar.png")
+  educator  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ImageData {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  data        Bytes
+  contentType String
+  Course      Course[]
+
+  @@map("image")
+}
+
+model Lesson {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  course   Course @relation(fields: [courseId], references: [id])
+  courseId String @db.ObjectId
+
+  @@map("lessons")
+}
+
+model Category {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  courseId String[] @db.ObjectId
+  courses  Course[] @relation(fields: [courseId], references: [id])
+}
+
+model Level {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  courseId String[] @db.ObjectId
+  courses  Course[]
+}
+
+model Course {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  rating       Float
+  description  String?
+  image        ImageData? @relation(fields: [imageDataId], references: [id])
+  category     String[]
+  level        String
+  published    Boolean    @default(false)
+  instructor   User       @relation(fields: [instructorId], references: [id])
+  instructorId String     @db.ObjectId
+  lessons      Lesson[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt()
+  publishedAt  DateTime
+  imageDataId  String     @db.ObjectId
+  categoryIds  String[]   @db.ObjectId
+  levelId      String     @db.ObjectId
+  categories   Category[] @relation(fields: [categoryIds], references: [id])
+  Level        Level      @relation(fields: [levelId], references: [id])
+
+  @@map("courses")
+}
